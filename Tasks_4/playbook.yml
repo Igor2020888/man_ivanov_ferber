@@ -1,0 +1,45 @@
+---
+- name: Install PO  
+  hosts: all    
+  become: yes
+
+  
+  vars:
+    sources_file: /home/igor/ansible/jenkins
+    destin_file: /etc/nginx/sites-available
+  
+  
+  tasks:
+  
+  - name: Install Jenkins
+    shell: wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+    
+  - name: Install Jenkins2
+    shell: sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+    
+  - name: Apt get update
+    shell: apt-get update 
+    
+  - name: Install Open JDK
+    apt: name=default-jdk state=latest 
+    
+  - name: Install Jenkins final
+    apt: name=jenkins state=latest
+  
+  - name: Install Nginx
+    apt:  name=nginx state=latest    
+  
+  - name: Copy file jenkins
+    copy: src={{ sources_file }} dest={{ destin_file }}
+     
+  - name: Create simlinc
+    shell: ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/jenkins
+    
+  - name: Restart nginx
+    shell: systemctl restart nginx.service 
+    
+  - name: iptables  
+    shell: iptables -A INPUT -p tcp --dport 8080 -s localhost -j ACCEPT
+    
+  - name: iptables2  
+    shell: iptables -A INPUT -p tcp --dport 8080 -j DROP
